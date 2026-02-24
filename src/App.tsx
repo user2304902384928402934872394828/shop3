@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AddProject from './components/AddProject';
 import ProjectsList from './components/ProjectsList';
 import ShopPage from './components/ShopPage';
@@ -124,48 +125,51 @@ export default function App() {
 
   // --- AUTHORIZED VIEW ---
   return (
-    <div className="min-h-screen bg-[#0c0f14] text-gray-100 flex flex-col">
-      <header className="bg-[#141821] border-b border-[#262d38] px-10 py-6 flex justify-between items-center shadow-lg">
-        <div>
-          <h1 className="text-3xl font-bold tracking-widest">SHOP</h1>
-          <p className="text-xs text-gray-500 mt-1">SHOP MANAGEMENT SYSTEM</p>
+    <Router>
+      <div className="min-h-screen bg-[#0c0f14] text-gray-100 flex flex-col">
+        <header className="bg-[#141821] border-b border-[#262d38] px-10 py-6 flex justify-between items-center shadow-lg">
+          <div>
+            <h1 className="text-3xl font-bold tracking-widest">SHOP</h1>
+            <p className="text-xs text-gray-500 mt-1">SHOP MANAGEMENT SYSTEM</p>
+          </div>
+
+          <div className="flex gap-3 items-center">
+            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+            <span className="text-xs text-gray-400">
+              SYSTEM ONLINE | LOGGED IN AS SHOP OWNER
+            </span>
+          </div>
+        </header>
+
+        <div className="bg-[#10141b] border-b border-[#262d38] px-10 py-6 flex gap-6">
+          <ControlButton
+            label="ACTIVE BUILDS"
+            active={true}
+            onClick={() => setPage('projects')}
+          />
+          <ControlButton
+            label="NEW BUILD"
+            active={false}
+            onClick={() => setPage('add')}
+          />
+          <ControlButton
+            label="PARTS"
+            active={false}
+            onClick={() => setPage('shop')}
+          />
         </div>
 
-        <div className="flex gap-3 items-center">
-          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="text-xs text-gray-400">
-            SYSTEM ONLINE | LOGGED IN AS SHOP OWNER
-          </span>
-        </div>
-      </header>
-
-      <div className="bg-[#10141b] border-b border-[#262d38] px-10 py-6 flex gap-6">
-        <ControlButton
-          label="ACTIVE BUILDS"
-          active={page === 'projects'}
-          onClick={() => setPage('projects')}
-        />
-        <ControlButton
-          label="NEW BUILD"
-          active={page === 'add'}
-          onClick={() => setPage('add')}
-        />
-        <ControlButton
-          label="PARTS"
-          active={page === 'shop'}
-          onClick={() => setPage('shop')}
-        />
+        <main className="flex-1 p-12 bg-[#0f141c]">
+          <div className="max-w-7xl mx-auto bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 shadow-2xl">
+            <Routes>
+              <Route path="/" element={<ProjectsList />} />
+              <Route path="/add" element={<AddProject onAdded={() => setPage('projects')} />} />
+              <Route path="/shop" element={<ShopPage />} />
+            </Routes>
+          </div>
+        </main>
       </div>
-
-      <main className="flex-1 p-12 bg-[#0f141c]">
-        <div className="max-w-7xl mx-auto bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 shadow-2xl">
-          {/* PAGE SWITCHING */}
-          {page === 'projects' && <ProjectsList />}
-          {page === 'add' && <AddProject onAdded={() => setPage('projects')} />}
-          {page === 'shop' && <ShopPage />}
-        </div>
-      </main>
-    </div>
+    </Router>
   );
 }
 
