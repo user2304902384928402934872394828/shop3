@@ -7,6 +7,7 @@ type Page = 'projects' | 'add' | 'shop';
 <Routes>
 <Route path="/" element={<Home />} />
 </Routes>
+
 export default function App() {
   const [page, setPage] = useState<Page>('projects');
   const [pinInput, setPinInput] = useState('');
@@ -206,3 +207,4 @@ function ControlButton({
     </button>
   );
 }
+export default App;
