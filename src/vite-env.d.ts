@@ -4,5 +4,5 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  base: './App.tsx', // adjust if deploying to subfolder
+  base: './src/App.tsx', // adjust if deploying to subfolder
 });
