@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import AddProject from './components/AddProject';
 import ProjectsList from './components/ProjectsList';
 import ShopPage from './components/ShopPage';
 
-type Page = 'projects' | 'add' | 'shop';
-
 export default function App() {
-  const [page, setPage] = useState<Page>('projects');
   const [pinInput, setPinInput] = useState('');
   const [authorized, setAuthorized] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
@@ -15,6 +12,7 @@ export default function App() {
   const [cooldown, setCooldown] = useState(0);
 
   const correctPin = '22443';
+  const navigate = useNavigate();
 
   // Restore session
   useEffect(() => {
@@ -46,6 +44,7 @@ export default function App() {
     if (pinInput === correctPin) {
       setAuthorized(true);
       sessionStorage.setItem('garage_auth', 'true');
+      navigate('/'); // go to projects page after unlock
     } else {
       const newErrors = errorCount + 1;
       setErrorCount(newErrors);
@@ -62,7 +61,6 @@ export default function App() {
   if (!authorized) {
     return (
       <div className="min-h-screen bg-[#0c0f14] flex items-center justify-center text-gray-100 relative overflow-hidden">
-        {/* Scanning Line */}
         <div className="absolute top-0 left-0 w-full h-1 bg-red-500 animate-pulse opacity-50"></div>
 
         <div className="bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 w-[420px] shadow-2xl text-center relative">
@@ -86,21 +84,18 @@ export default function App() {
                 {num}
               </button>
             ))}
-
             <button
               onClick={handleClear}
               className="bg-[#1b212c] border border-red-500 text-red-500 py-3 rounded-lg font-bold hover:bg-red-500 hover:text-black transition"
             >
               CLR
             </button>
-
             <button
               onClick={() => handleNumberClick('0')}
               className="bg-[#1b212c] border border-[#303845] py-3 rounded-lg font-bold hover:border-orange-500 hover:bg-[#222938] transition"
             >
               0
             </button>
-
             <button
               onClick={handleUnlock}
               className="bg-orange-500 py-3 rounded-lg font-bold text-black hover:bg-red-600 transition shadow-lg shadow-orange-500/40"
@@ -125,76 +120,47 @@ export default function App() {
 
   // --- AUTHORIZED VIEW ---
   return (
-    <Router>
-      <div className="min-h-screen bg-[#0c0f14] text-gray-100 flex flex-col">
-        <header className="bg-[#141821] border-b border-[#262d38] px-10 py-6 flex justify-between items-center shadow-lg">
-          <div>
-            <h1 className="text-3xl font-bold tracking-widest">SHOP</h1>
-            <p className="text-xs text-gray-500 mt-1">SHOP MANAGEMENT SYSTEM</p>
-          </div>
-
-          <div className="flex gap-3 items-center">
-            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs text-gray-400">
-              SYSTEM ONLINE | LOGGED IN AS SHOP OWNER
-            </span>
-          </div>
-        </header>
-
-        <div className="bg-[#10141b] border-b border-[#262d38] px-10 py-6 flex gap-6">
-          <ControlButton
-            label="ACTIVE BUILDS"
-            active={true}
-            onClick={() => setPage('projects')}
-          />
-          <ControlButton
-            label="NEW BUILD"
-            active={false}
-            onClick={() => setPage('add')}
-          />
-          <ControlButton
-            label="PARTS"
-            active={false}
-            onClick={() => setPage('shop')}
-          />
+    <div className="min-h-screen bg-[#0c0f14] text-gray-100 flex flex-col">
+      <header className="bg-[#141821] border-b border-[#262d38] px-10 py-6 flex justify-between items-center shadow-lg">
+        <div>
+          <h1 className="text-3xl font-bold tracking-widest">SHOP</h1>
+          <p className="text-xs text-gray-500 mt-1">SHOP MANAGEMENT SYSTEM</p>
         </div>
 
-        <main className="flex-1 p-12 bg-[#0f141c]">
-          <div className="max-w-7xl mx-auto bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 shadow-2xl">
-            <Routes>
-              <Route path="/" element={<ProjectsList />} />
-              <Route path="/add" element={<AddProject onAdded={() => setPage('projects')} />} />
-              <Route path="/shop" element={<ShopPage />} />
-            </Routes>
-          </div>
-        </main>
+        <div className="flex gap-3 items-center">
+          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+          <span className="text-xs text-gray-400">
+            SYSTEM ONLINE | LOGGED IN AS SHOP OWNER
+          </span>
+        </div>
+      </header>
+
+      <div className="bg-[#10141b] border-b border-[#262d38] px-10 py-6 flex gap-6">
+        <NavButton to="/" label="ACTIVE BUILDS" />
+        <NavButton to="/add" label="NEW BUILD" />
+        <NavButton to="/shop" label="PARTS" />
       </div>
-    </Router>
+
+      <main className="flex-1 p-12 bg-[#0f141c]">
+        <div className="max-w-7xl mx-auto bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 shadow-2xl">
+          <Routes>
+            <Route path="/" element={<ProjectsList />} />
+            <Route path="/add" element={<AddProject onAdded={() => navigate('/')} />} />
+            <Route path="/shop" element={<ShopPage />} />
+          </Routes>
+        </div>
+      </main>
+    </div>
   );
 }
 
-function ControlButton({
-  label,
-  active,
-  onClick,
-}: {
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
+// --- Navigation Button ---
+function NavButton({ to, label }: { to: string; label: string }) {
   return (
-    <button
-      onClick={onClick}
-      className={`
-        px-8 py-4 rounded-lg font-bold tracking-wide transition-all duration-300 border
-        ${
-          active
-            ? 'bg-orange-500 text-black border-orange-500 shadow-lg shadow-orange-500/40'
-            : 'bg-[#1b212c] border-[#303845] hover:border-red-500 hover:bg-[#222938]'
-        }
-      `}
-    >
-      {label}
-    </button>
+    <Link to={to}>
+      <button className="px-8 py-4 rounded-lg font-bold tracking-wide transition-all duration-300 border bg-[#1b212c] border-[#303845] hover:border-red-500 hover:bg-[#222938]">
+        {label}
+      </button>
+    </Link>
   );
 }
