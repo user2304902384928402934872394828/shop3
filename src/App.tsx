@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import AddProject from './components/AddProject';
 import ProjectsList from './components/ProjectsList';
 import ShopPage from './components/ShopPage';
 
 type Page = 'projects' | 'add' | 'shop';
-<Routes>
-<Route path="/" element={<Home />} />
-</Routes>
 
 export default function App() {
   const [page, setPage] = useState<Page>('projects');
@@ -26,34 +24,24 @@ export default function App() {
 
   // Cooldown timer
   useEffect(() => {
-    let timer: NodeJS.Timeout;
     if (lockedOut && cooldown > 0) {
-      timer = setInterval(() => {
-        setCooldown((prev) => prev - 1);
-      }, 1000);
-    }
-
-    if (cooldown === 0 && lockedOut) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    } else if (cooldown === 0 && lockedOut) {
       setLockedOut(false);
       setErrorCount(0);
     }
-
-    return () => clearInterval(timer);
   }, [lockedOut, cooldown]);
 
   const handleNumberClick = (num: string) => {
     if (lockedOut) return;
-    if (pinInput.length < 5) {
-      setPinInput((prev) => prev + num);
-    }
+    if (pinInput.length < 5) setPinInput((prev) => prev + num);
   };
 
-  const handleClear = () => {
-    setPinInput('');
-  };
+  const handleClear = () => setPinInput('');
 
   const handleUnlock = () => {
-    if (lockedOut) return;
+    if (lockedOut || pinInput.length < 5) return;
 
     if (pinInput === correctPin) {
       setAuthorized(true);
@@ -70,6 +58,7 @@ export default function App() {
     }
   };
 
+  // --- UNAUTHORIZED VIEW ---
   if (!authorized) {
     return (
       <div className="min-h-screen bg-[#0c0f14] flex items-center justify-center text-gray-100 relative overflow-hidden">
@@ -83,12 +72,10 @@ export default function App() {
 
           <p className="text-xs text-gray-500 mb-6">AUTHORIZATION REQUIRED</p>
 
-          {/* PIN DISPLAY */}
           <div className="mb-6 bg-[#1b212c] border border-[#303845] rounded-lg py-3 tracking-widest text-lg">
             {pinInput.padEnd(5, '_')}
           </div>
 
-          {/* KEYPAD */}
           <div className="grid grid-cols-3 gap-4 mb-6">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
               <button
@@ -122,7 +109,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* LOCKOUT MESSAGE */}
           {lockedOut && (
             <p className="text-red-500 animate-pulse">
               SYSTEM LOCKED — TRY AGAIN IN {cooldown}s
@@ -137,48 +123,53 @@ export default function App() {
     );
   }
 
+  // --- AUTHORIZED VIEW ---
   return (
-    <div className="min-h-screen bg-[#0c0f14] text-gray-100 flex flex-col">
-      <header className="bg-[#141821] border-b border-[#262d38] px-10 py-6 flex justify-between items-center shadow-lg">
-        <div>
-          <h1 className="text-3xl font-bold tracking-widest">SHOP</h1>
-          <p className="text-xs text-gray-500 mt-1">SHOP MANAGEMENT SYSTEM</p>
+    <Router>
+      <div className="min-h-screen bg-[#0c0f14] text-gray-100 flex flex-col">
+        <header className="bg-[#141821] border-b border-[#262d38] px-10 py-6 flex justify-between items-center shadow-lg">
+          <div>
+            <h1 className="text-3xl font-bold tracking-widest">SHOP</h1>
+            <p className="text-xs text-gray-500 mt-1">SHOP MANAGEMENT SYSTEM</p>
+          </div>
+
+          <div className="flex gap-3 items-center">
+            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+            <span className="text-xs text-gray-400">
+              SYSTEM ONLINE | LOGGED IN AS SHOP OWNER
+            </span>
+          </div>
+        </header>
+
+        <div className="bg-[#10141b] border-b border-[#262d38] px-10 py-6 flex gap-6">
+          <ControlButton
+            label="ACTIVE BUILDS"
+            active={true}
+            onClick={() => setPage('projects')}
+          />
+          <ControlButton
+            label="NEW BUILD"
+            active={false}
+            onClick={() => setPage('add')}
+          />
+          <ControlButton
+            label="PARTS"
+            active={false}
+            onClick={() => setPage('shop')}
+          />
         </div>
 
-        <div className="flex gap-3 items-center">
-          <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-          <span className="text-xs text-gray-400">
-            SYSTEM ONLINE | LOGGED IN AS SHOP OWNER
-          </span>
-        </div>
-      </header>
-
-      <div className="bg-[#10141b] border-b border-[#262d38] px-10 py-6 flex gap-6">
-        <ControlButton
-          label="ACTIVE BUILDS"
-          active={page === 'projects'}
-          onClick={() => setPage('projects')}
-        />
-        <ControlButton
-          label="NEW BUILD"
-          active={page === 'add'}
-          onClick={() => setPage('add')}
-        />
-        <ControlButton
-          label="PARTS"
-          active={page === 'shop'}
-          onClick={() => setPage('shop')}
-        />
+        <main className="flex-1 p-12 bg-[#0f141c]">
+          <div className="max-w-7xl mx-auto bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 shadow-2xl">
+            <Routes>
+              <Route path="/" element={<ProjectsList />} />
+              <Route path="/add" element={<AddProject onAdded={() => setPage('projects')} />} />
+              <Route path="/shop" element={<ShopPage />} />
+            </Routes>
+          </div>
+        </main>
       </div>
-
-      <main className="flex-1 p-12 bg-[#0f141c]">
-        <div className="max-w-7xl mx-auto bg-[#161c26] border border-[#2a313d] rounded-2xl p-10 shadow-2xl">
-          {page === 'projects' && <ProjectsList />}
-          {page === 'add' && <AddProject onAdded={() => setPage('projects')} />}
-          {page === 'shop' && <ShopPage />}
-        </div>
-      </main>
-    </div>
+    </Router>
   );
 }
 
@@ -207,4 +198,3 @@ function ControlButton({
     </button>
   );
 }
-export default App;
